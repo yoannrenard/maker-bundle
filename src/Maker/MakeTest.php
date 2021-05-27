@@ -24,6 +24,7 @@ use Symfony\Component\BrowserKit\History;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 use Symfony\Component\Panther\PantherTestCaseTrait;
 
@@ -80,10 +81,14 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
         $command
             ->addArgument('type', InputArgument::OPTIONAL, 'The type of test: '.implode(', ', $typesDesc))
             ->addArgument('name', InputArgument::OPTIONAL, 'The name of the test class (e.g. <fg=yellow>BlogPostTest</>)')
+            ->addArgument('generate-production-class', InputArgument::OPTIONAL, 'Generate the production class (yes/no)', false)
+            ->addArgument('production-class-name', InputArgument::OPTIONAL, 'The name of the production class (e.g. <fg=yellow>BlogPost</>)')
             ->setHelp(file_get_contents(__DIR__.'/../Resources/help/MakeTest.txt').implode("\n", $typesHelp));
 
         $inputConf->setArgumentAsNonInteractive('name');
         $inputConf->setArgumentAsNonInteractive('type');
+        $inputConf->setArgumentAsNonInteractive('generate-production-class');
+        $inputConf->setArgumentAsNonInteractive('production-class-name');
     }
 
     public function interact(InputInterface $input, ConsoleStyle $io, Command $command)
@@ -129,6 +134,27 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
             $value = $io->ask($nameArgument->getDescription(), $nameArgument->getDefault(), [Validator::class, 'notBlank']);
             $input->setArgument($nameArgument->getName(), $value);
         }
+
+        if ('TestCase' === $input->getArgument('type')) {
+            if ('yes' !== $input->getArgument('generate-production-class')) {
+                $willGenerateProductionClass = $io->confirm('Do you want to generate your production class?', 'no');
+                $input->setArgument('generate-production-class', $willGenerateProductionClass);
+            }
+
+            if ($input->getArgument('generate-production-class') && null === $input->getArgument('production-class-name')) {
+                $productionCodeClass = $input->getArgument('production-class-name');
+                if (empty($productionCodeClass)) {
+                    $productionCodeClass = trim($input->getArgument('name'), 'Test');
+                    $productionCodeClass = str_ireplace('Tests\\', '', $productionCodeClass);
+                }
+
+                $questionAuthenticatorClass = new Question(
+                    sprintf('The name of the production class to create (default. <fg=yellow>%s</>)', $productionCodeClass),
+                    $productionCodeClass
+                );
+                $input->setArgument('production-class-name', $io->askQuestion($questionAuthenticatorClass));
+            }
+        }
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
@@ -146,6 +172,12 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
             "test/$type.tpl.php",
             ['web_assertions_are_available' => trait_exists(WebTestAssertionsTrait::class)]
         );
+
+        if ($input->getArgument('production-class-name') && $input->getArgument('generate-production-class')) {
+            $classNameDetails = $generator->createClassNameDetails($input->getArgument('production-class-name'), '');
+
+            $generator->generateClass($classNameDetails->getFullName(), 'Class.tpl.php');
+        }
 
         $generator->writeChanges();
 

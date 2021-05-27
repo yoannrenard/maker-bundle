@@ -14,53 +14,268 @@ namespace Symfony\Bundle\MakerBundle\Tests\Maker;
 use Symfony\Bundle\MakerBundle\Maker\MakeTest;
 use Symfony\Bundle\MakerBundle\Test\MakerTestCase;
 use Symfony\Bundle\MakerBundle\Test\MakerTestDetails;
+use Symfony\Component\Filesystem\Filesystem;
 
 class MakeTestTest extends MakerTestCase
 {
     public function getTestDetails()
     {
-        yield 'TestCase' => [MakerTestDetails::createTest(
+        yield 'TestCase with class name (FooBar)' => [MakerTestDetails::createTest(
             $this->getMakerInstance(MakeTest::class),
             [
                 // type
                 'TestCase',
                 // class name
                 'FooBar',
-            ]),
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/tests/FooBarTest.php', $directory)));
+                }
+            ),
         ];
 
-        yield 'KernelTestCase' => [MakerTestDetails::createTest(
+        yield 'TestCase with class name and Suffix (FooBarTest)' => [MakerTestDetails::createTest(
             $this->getMakerInstance(MakeTest::class),
             [
                 // type
-                'KernelTestCase',
-                // functional test class name
-                'FooBar',
+                'TestCase',
+                // class name
+                'FooBarTest',
             ])
-            ->setFixtureFilesPath(__DIR__.'/../fixtures/MakeFunctional'),
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/tests/FooBarTest.php', $directory)));
+                }
+            ),
         ];
 
-        yield 'WebTestCase' => [MakerTestDetails::createTest(
+        yield 'TestCase with extended class name (Service\Util)' => [MakerTestDetails::createTest(
             $this->getMakerInstance(MakeTest::class),
             [
                 // type
-                'WebTestCase',
-                // functional test class name
-                'FooBar',
+                'TestCase',
+                // class name
+                'Service\Util',
             ])
-            ->setFixtureFilesPath(__DIR__.'/../fixtures/MakeFunctional'),
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/tests/Service/UtilTest.php', $directory)));
+                }
+            ),
         ];
 
-        yield 'PantherTestCase' => [MakerTestDetails::createTest(
+        yield 'TestCase with extended class name and suffix (Service\UtilTest)' => [MakerTestDetails::createTest(
             $this->getMakerInstance(MakeTest::class),
             [
                 // type
-                'PantherTestCase',
-                // functional test class name
-                'FooBar',
+                'TestCase',
+                // class name
+                'Service\UtilTest',
             ])
-            ->addExtraDependencies('panther')
-            ->setFixtureFilesPath(__DIR__.'/../fixtures/MakeFunctional'),
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/tests/Service/UtilTest.php', $directory)));
+                }
+            ),
         ];
+
+        yield 'TestCase with fully qualified path name (\App\Tests\Service\UtilTest)' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                '\App\Tests\Service\UtilTest',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/tests/Service/UtilTest.php', $directory)));
+                }
+            ),
+        ];
+
+        // Generate production class
+        yield 'TestCase with class name (FooBar) 1' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                'FooBar',
+                // generate production class
+                'yes',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/src/FooBar.php', $directory)));
+                }
+            ),
+        ];
+
+        yield 'TestCase with class name and Suffix (FooBarTest) 2' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                'FooBarTest',
+                // generate production class
+                'yes',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/src/FooBar.php', $directory)));
+                }
+            ),
+        ];
+
+        yield 'TestCase with extended class name (Service\Util) 3' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                'Service\Util',
+                // generate production class
+                'yes',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/src/Service/Util.php', $directory)));
+                }
+            ),
+        ];
+
+        yield 'TestCase with extended class name and suffix (Service\UtilTest) 4' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                'Service\UtilTest',
+                // generate production class
+                'yes',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/src/Service/Util.php', $directory)));
+                }
+            ),
+        ];
+
+        yield 'TestCase with fully qualified path name (\App\Tests\Service\UtilTest) 5' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                '\App\Tests\Service\UtilTest',
+                // generate production class
+                'yes',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+                    $this->assertStringContainsString('Success', $output);
+
+                    $fs = new Filesystem();
+                    $this->assertTrue($fs->exists(sprintf('%s/src/Service/Util.php', $directory)));
+                }
+            ),
+        ];
+
+        // Generate given production class
+        yield 'TestCase with fully qualified path name (\App\Unit\Tests\Service\UtilTest) with given production class' => [MakerTestDetails::createTest(
+            $this->getMakerInstance(MakeTest::class),
+            [
+                // type
+                'TestCase',
+                // class name
+                '\App\Tests\Unit\Service\UtilTest',
+                // generate production class
+                'yes',
+                // production FQPN
+                '\App\Service\Util',
+//                '\App\Tests\Unit\Service\UtilTest',
+            ])
+            ->assert(
+                function (string $output, string $directory) {
+//                    dd($output);
+                    $this->assertStringContainsString('Success', $output);
+
+//                    dd(scandir(sprintf('%s/src/', $directory)));
+//                    scandir(sprintf('%s/src/Service/Util.php', $directory));die;
+
+                    $fs = new Filesystem();
+                    $this->assertTrue(
+                        $fs->exists(sprintf('%s/tests/Unit/Service/UtilTest.php', $directory)),
+                        sprintf('Failed aserting that the file %s exists.', '/tests/Unit/Service/UtilTest.php')
+                    );
+
+                    $this->assertTrue($fs->exists(sprintf('%s/src/Service/Util.php', $directory)));
+                }
+            ),
+        ];
+
+//        yield 'KernelTestCase' => [MakerTestDetails::createTest(
+//            $this->getMakerInstance(MakeTest::class),
+//            [
+//                // type
+//                'KernelTestCase',
+//                // functional test class name
+//                'FooBar',
+//            ])
+//            ->setFixtureFilesPath(__DIR__.'/../fixtures/MakeFunctional'),
+//        ];
+//
+//        yield 'WebTestCase' => [MakerTestDetails::createTest(
+//            $this->getMakerInstance(MakeTest::class),
+//            [
+//                // type
+//                'WebTestCase',
+//                // functional test class name
+//                'FooBar',
+//            ])
+//            ->setFixtureFilesPath(__DIR__.'/../fixtures/MakeFunctional'),
+//        ];
+//
+//        yield 'PantherTestCase' => [MakerTestDetails::createTest(
+//            $this->getMakerInstance(MakeTest::class),
+//            [
+//                // type
+//                'PantherTestCase',
+//                // functional test class name
+//                'FooBar',
+//            ])
+//            ->addExtraDependencies('panther')
+//            ->setFixtureFilesPath(__DIR__.'/../fixtures/MakeFunctional'),
+//        ];
     }
 }
