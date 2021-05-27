@@ -173,7 +173,7 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
             ['web_assertions_are_available' => trait_exists(WebTestAssertionsTrait::class)]
         );
 
-        if ($input->getArgument('production-class-name') && $input->getArgument('generate-production-class')) {
+        if (!empty($input->getArgument('production-class-name')) && true === $input->getArgument('generate-production-class')) {
             $classNameDetails = $generator->createClassNameDetails($input->getArgument('production-class-name'), '');
 
             $generator->generateClass($classNameDetails->getFullName(), 'Class.tpl.php');
