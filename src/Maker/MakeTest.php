@@ -144,8 +144,11 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
             if ($input->getArgument('generate-production-class') && null === $input->getArgument('production-class-name')) {
                 $productionCodeClass = $input->getArgument('production-class-name');
                 if (empty($productionCodeClass)) {
-                    $productionCodeClass = trim($input->getArgument('name'), 'Test');
-                    $productionCodeClass = str_ireplace('Tests\\', '', $productionCodeClass);
+                    $productionCodeClass = str_ireplace(
+                        'Tests\\',
+                        '',
+                        trim($input->getArgument('name'), 'Test')
+                    );
                 }
 
                 $questionAuthenticatorClass = new Question(
