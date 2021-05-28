@@ -136,10 +136,15 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
         }
 
         if ('TestCase' === $input->getArgument('type')) {
-            if ('yes' !== $input->getArgument('generate-production-class')) {
-                $willGenerateProductionClass = $io->confirm('Do you want to generate your production class?', 'no');
-                $input->setArgument('generate-production-class', $willGenerateProductionClass);
+            $willGenerateProductionClass = null;
+            if (!empty($input->getArgument('generate-production-class'))) {
+                $willGenerateProductionClass = 'yes' === $input->getArgument('generate-production-class');
             }
+
+            if (null === $willGenerateProductionClass) {
+                $willGenerateProductionClass = $io->confirm('Do you want to generate your production class?', 'no');
+            }
+            $input->setArgument('generate-production-class', $willGenerateProductionClass);
 
             if ($input->getArgument('generate-production-class') && null === $input->getArgument('production-class-name')) {
                 $productionCodeClass = $input->getArgument('production-class-name');
@@ -152,7 +157,7 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
                 }
 
                 $questionAuthenticatorClass = new Question(
-                    sprintf('The name of the production class to create (default. <fg=yellow>%s</>)', $productionCodeClass),
+                    sprintf('The name of the production class to create (e.g. <fg=yellow>BlogPost</>)', $productionCodeClass),
                     $productionCodeClass
                 );
                 $input->setArgument('production-class-name', $io->askQuestion($questionAuthenticatorClass));
