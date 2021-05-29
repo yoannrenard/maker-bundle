@@ -81,7 +81,7 @@ final class MakeTest extends AbstractMaker implements InputAwareMakerInterface
         $command
             ->addArgument('type', InputArgument::OPTIONAL, 'The type of test: '.implode(', ', $typesDesc))
             ->addArgument('name', InputArgument::OPTIONAL, 'The name of the test class (e.g. <fg=yellow>BlogPostTest</>)')
-            ->addArgument('generate-production-class', InputArgument::OPTIONAL, 'Generate the production class (yes/no)', false)
+            ->addArgument('generate-production-class', InputArgument::OPTIONAL, 'Generate the production class (yes/no)')
             ->addArgument('production-class-name', InputArgument::OPTIONAL, 'The name of the production class (e.g. <fg=yellow>BlogPost</>)')
             ->setHelp(file_get_contents(__DIR__.'/../Resources/help/MakeTest.txt').implode("\n", $typesHelp));
 
